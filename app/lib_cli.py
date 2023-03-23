@@ -1,23 +1,11 @@
-import time
-
-class CliInputPrompt():
+class CliInputOutputPrompt():
 
     NOTE_PROMPT = ("note_title", "note_body")
 
     USER_MESSAGES = {
         NOTE_PROMPT[0]: "Введите заголовок заметки: ",
         NOTE_PROMPT[1]: "Введите содержание заметки: ",
-
     }
-    
-    DATE_SEARCH = ("start_date", "stop_date")
-
-    USER_MESSAGES_DATE = {
-        DATE_SEARCH[0]: "Введите начальную дату в формате год/месяц/день: ",
-        DATE_SEARCH[1]: "Введите конечную дату в формате год/месяц/день: ",
-
-    }
-
     INIT_MSG_CONTENT = [
         "Какое действие вы хотите совершить?",
         "1. Создать новую заметку",
@@ -31,50 +19,81 @@ class CliInputPrompt():
     USER_CHOICE_MSG = ("Введите номер действия: ",
                        "Введен неправильный номер. Попробуйте еще раз.")
 
-    # не знаю, нужен ли здесь этот метод, обсудим
-    def initialActions(cls):
-        cls.initialMessage
-        cls.userChoice
-
-    #Выводит в консоль вопрос к пользователю, что он хочет
-    def initialMessage(cls):
-        print("\n".join(cls.INIT_MSG_CONTENT))
+    NOTE_CHANGE_MSG = [
+        "Что вы хотите изменить?",
+        "1. Название заметки",
+        "2. Текст заметки"
+        ]
     
-    # Вызывает метод, соответствующий выбору пользователя.
-    # Поскольку методы еще не допилены, не функционирует.
-    # Можно проверить, заменив UserChoiceResult на список из 6 элементов.
-    def userChoice(cls):
-        user_response_int = int(cls.promptUserForString(cls.USER_CHOICE_MSG[0]))
-        if user_response_int <= 0 or user_response_int > len(cls.UserChoiceResult):
-            print(cls.USER_CHOICE_MSG[1])
-            cls.userChoice()
-        else:
-            return cls.UserChoiceResult()[user_response_int - 1]
-# UserChoiceResult - метод создания списка, где будут храниться функции
-#                    для исполнения желаний пользователя
+    def chooseMethod(cls):
+        return cls.userChoice(cls.INIT_MSG_CONTENT, cls.USER_CHOICE_MSG[0], UserChoiceResult)
 
+    @classmethod
+    def chooseTitleOrBody(cls):
+        cls.msgToUser (cls.NOTE_CHANGE_MSG)
+        return cls.userChoice(cls.USER_CHOICE_MSG[0], cls.NOTE_PROMPT)
+
+    # Вызывает метод, соответствующий выбору пользователя. UserChoiceResult
+    @classmethod
+    def userChoice(cls, user_choice_msg, used_list):
+        try:
+            user_response_int = int(cls.promptUserForString(user_choice_msg))
+            if user_response_int <= 0 or user_response_int > len(used_list):
+                print(cls.USER_CHOICE_MSG[1])
+                return cls.userChoice(user_choice_msg, used_list)
+            else: return used_list[user_response_int - 1]
+        except:
+            print (cls.USER_CHOICE_MSG[1])
+            return cls.userChoice(user_choice_msg, used_list)
+
+    # Выводит в консоль вопрос к пользователю, что он хочет
+    def msgToUser(message):
+        print("\n".join(message))
+
+    @classmethod
+    def getNewText(cls, user_choice):
+        new_text = None
+        if user_choice == cls.NOTE_PROMPT[0]:
+            new_text = cls.promptUserForString(cls.USER_MESSAGES[cls.NOTE_PROMPT[0]])
+        if user_choice == cls.NOTE_PROMPT[1]:
+            new_text = cls.promptUserForString(cls.USER_MESSAGES[cls.NOTE_PROMPT[1]])
+        return new_text
+
+    # 1.1, (внутри 1.1.1) из строки юзера возвращает словарь с названием и текстом заметки
     @classmethod
     def getCliInputStream(cls):
         cli_input_stream = {}
         for np in cls.NOTE_PROMPT:
-            cli_input_stream[np] = cls.promptUserForString(cls.USER_MESSAGES[np])
+            cli_input_stream[np] = cls.promptUserForString(cls.USER_MESSAGES[np]) # 1.1.1
         return cli_input_stream
-
+    
+    # 1.1.1 юзеру выводится message, возвращается его ввод str
     @classmethod
     def promptUserForString(cls, message):
         user_string = input(message)
         return user_string
-    
-    # Диалог запроса даты поиска 
+
+    # 2.2 выводит названия заметок
+    def printNoteTitles(note_titles):
+        for i in note_titles:
+            print(i)
+
+    # 3.1 Спрашивает юзера, какую заметку он хочет посмотреть и возвращает строку
+    #  с названием заметки
     @classmethod
-    def getUserDateForSearch(cls):
-        date_input_stream = {}
-        for i in cls.DATE_SEARCH:
-           date_input_stream[i] = cls.promptUserForString(cls.USER_MESSAGES_DATE[i])
-        return date_input_stream
+    def whichNoteUserWants(cls):
+        chosen_title = cls.promptUserForString(cls.USER_MESSAGES[cls.NOTE_PROMPT[0]])
+        return chosen_title
     
-    # Перевод строки в datetime
-    @staticmethod
-    def _formatStringToDateTime(user_date_time):
-        date_time_from_string = time.strptime(user_date_time, "%Y/%m/%d")
-        return date_time_from_string
+    # 3.3 
+    @classmethod
+    def PrintBodyOfTheChosenNote(cls, json_data):
+        if json_data == None: return
+        else:
+            note_body = json_data['note_body']
+            print(f'Текст выбранной заметки:\n{note_body}')
+
+
+# abc = CliInputOutputPrompt.chooseTitleOrBody()
+# print(abc)
+# print(CliInputOutputPrompt.NOTE_PROMPT[0])

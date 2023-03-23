@@ -1,4 +1,5 @@
 import os
+import json
 from glob import glob
 
 
@@ -6,13 +7,16 @@ from glob import glob
 class FileSystemHandler:
     STORAGE_DIR = "data"
     FILE_FORMAT = ".json"
+    FILE_DOESNT_EXIST_MESSAGE = "Такой заметки не существует"
 
     def __init__(self):
         pass
 
+    # 1.4 Создает папку 'data', если не создана; создает в этой папке файл с именем
+    # строкаДатаВремяВФорматеID.json и кладет в него json строку с данными заметки
     @classmethod
     def saveNote(cls, write_data):
-        file_name = FileSystemHandler.getFileName(write_data[1])
+        file_name = cls.getFileName(write_data[1]) # 1.4.1
         try:
             os.mkdir(cls.STORAGE_DIR)
         except FileExistsError:
@@ -22,14 +26,14 @@ class FileSystemHandler:
                 file.write(write_data[0])
 
     @classmethod
-    def delNote(cls, note_id):   
+    def delNote(cls, note_id):
         file_name = cls.getFileName(note_id)
         if os.path.isfile(file_name):
             os.remove(file_name)
         else:
-            FileSystemReader.FILE_NOT_EXISTS_MESSAGE
+            cls.FILE_DOESNT_EXIST_MESSAGE
 
-
+    # 1.4.1 Возвращает имя файла - строку типа 'data/строкаДатаВремяВФорматеID.json'
     @classmethod
     def getFileName(cls, note_id):
         file_name = cls.STORAGE_DIR + "/" + note_id + cls.FILE_FORMAT
@@ -48,7 +52,7 @@ class FileSystemHandler:
     # Создает словарь из времени создания и имени файла, сортирует и записывает в новый список
     @classmethod
     def createListNoteWithDate(cls):
-        list_note = createListNote()
+        list_note = cls.createListNote()
         list_note_date = {}
         for i in range(0, len(list_note)):
             list_note_date.update({list_note[i]: os.path.getmtime(os.getcwd() + "\\" + list_note[i] + ".json")})
@@ -66,43 +70,60 @@ class FileSystemHandler:
    
 
 class FileSystemReader(FileSystemHandler):
-    FILE_NOT_EXISTS_MESSAGE = "Note didn't exist"
+    STORAGE_DIR_FULL = os.getcwd() + "/data"
 
     def __init__(self, id):
         self.file_id = id
         self.file_name = ""
 
+    # x (внутри x.1 и x.2) принимает экземпляр класса с ID и именем из x.1,
+    # принимает и возвращает данные из файла
     @classmethod
     def getJsonById(cls, file_id):
-        file = cls.getFileFactory(file_id)
-        json_data = file.readFile()
+        file = cls.getFileFactory(file_id)  # x.1
+        json_data = file.readFile()         # x.2
         return json_data
 
+    # x.1 Создает экземпляр файла. Исходя из входящего ID, автоматически присваивает этот
+    # ID соотв аргументу и присваивает строку 'data/строкаДатаВремяВФорматеID.json'
+    # аргументу "Имя"
     @classmethod
     def getFileFactory(cls, file_id):
         file_obj = cls(file_id)
-        file_obj.file_name = file_obj.getFileName(file_obj.file_id)
+        file_obj.file_name = file_obj.getFileName(file_obj.file_id) # 1.4.1
         return file_obj
 
+    # x.2 Проверяет есть можно ли выполнить метод открытия файла
+    # (существует ли такой файл) и выполняет, если можно
     def readFile(self):
         try:
-            return self.getFileContents()
+            return self.getFileContents() # x.2.1
         except FileNotFoundError:
-            return self.FILE_NOT_EXISTS_MESSAGE
+            return self.FILE_DOESNT_EXIST_MESSAGE
 
-    def getFileContents(self):
-        with open(self.file_name, "r") as file:
-            file_contents = file.read()
+    @classmethod
+    def getFileContents(cls, file):
+        with open(f'{cls.STORAGE_DIR_FULL}/{file}', 'r') as current_file:
+            file_contents = json.loads(current_file.read())
         return file_contents
-
-    # Получение json из файла на основе title заметки
+    
+    # 2.1 Возвращает имена заметок из файлов
+    @classmethod
+    def listOfNoteTitles(cls):
+        note_titles = []
+        for file in os.listdir(cls.STORAGE_DIR_FULL):
+            with open(f'{cls.STORAGE_DIR_FULL}/{file}', 'r') as current_file:
+                note_titles.append(json.loads(current_file.read())['note_title'])
+        return note_titles
+    
+    # 3.2 Принимает название заметки и возвращает словарь с содержимым заметки
+    # или сообщение, что заметка не существует
     @classmethod
     def getJsonByNoteTitle(cls, title: str):
-        for file in glob("*.json"):
+        for file in os.listdir(cls.STORAGE_DIR_FULL):
             json_data = cls.getFileContents(file)
-            if json_data.find(title) != -1:
-                return  json_data                
+            if str(json_data).find(title) != -1:
+                return  json_data
             else:
                 continue
-        return cls.FILE_NOT_EXISTS_MESSAGE
- 
+        print(cls.FILE_DOESNT_EXIST_MESSAGE)
