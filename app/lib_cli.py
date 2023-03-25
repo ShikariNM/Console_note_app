@@ -6,34 +6,37 @@ class CliInputOutputPrompt():
         NOTE_PROMPT[0]: "Введите заголовок заметки: ",
         NOTE_PROMPT[1]: "Введите содержание заметки: ",
     }
-    INIT_MSG_CONTENT = [
-        "Какое действие вы хотите совершить?",
-        "1. Создать новую заметку",
-        "2. Посмотреть список заметок по названииям",
-        "3. Вывести текст заметки на экран",
-        "4. Изменить заметку",
-        "5. Удалить заметку",
-        "6. Посмотреть заметки в интервале дат создания"
-    ]
+    INIT_MSG_CONTENT = ("Какое действие вы хотите совершить?",
+                        "1. Создать новую заметку",
+                        "2. Посмотреть список заметок по названииям",
+                        "3. Вывести текст заметки на экран",
+                        "4. Изменить заметку",
+                        "5. Удалить заметку",
+                        "6. Посмотреть заметки в интервале дат создания")
 
     USER_CHOICE_MSG = ("Введите номер действия: ",
                        "Введен неправильный номер. Попробуйте еще раз.")
 
-    NOTE_CHANGE_MSG = [
-        "Что вы хотите изменить?",
-        "1. Название заметки",
-        "2. Текст заметки"
-        ]
+    NOTE_CHANGE_MSG = ("Что вы хотите изменить?",
+                       "1. Название заметки",
+                       "2. Текст заметки")
     
-    def chooseMethod(cls):
-        return cls.userChoice(cls.INIT_MSG_CONTENT, cls.USER_CHOICE_MSG[0], UserChoiceResult)
+    DATE_MSG = ("Дата и время вводится в формате YYYY mm dd HH MM SS",
+                "Введите начальную дату: ",
+                "Введите конечную дату: ")
+    
+    WRONG_INPUT_MSG = "Введенная дата не соответствует формату"
+    
+    # def chooseMethod(cls, function_list):
+    #     cls.msgToUser(cls.INIT_MSG_CONTENT)
+    #     return cls.userChoice(cls.USER_CHOICE_MSG[0], function_list)
 
     @classmethod
     def chooseTitleOrBody(cls):
         cls.msgToUser (cls.NOTE_CHANGE_MSG)
         return cls.userChoice(cls.USER_CHOICE_MSG[0], cls.NOTE_PROMPT)
 
-    # Вызывает метод, соответствующий выбору пользователя. UserChoiceResult
+    # Вызывает метод, соответствующий выбору пользователя.
     @classmethod
     def userChoice(cls, user_choice_msg, used_list):
         try:
@@ -47,6 +50,7 @@ class CliInputOutputPrompt():
             return cls.userChoice(user_choice_msg, used_list)
 
     # Выводит в консоль вопрос к пользователю, что он хочет
+    @classmethod
     def msgToUser(message):
         print("\n".join(message))
 
@@ -93,7 +97,13 @@ class CliInputOutputPrompt():
             note_body = json_data['note_body']
             print(f'Текст выбранной заметки:\n{note_body}')
 
+    @classmethod
+    def getDatesFromUser(cls):
+        print(cls.DATE_MSG[0])
+        startDate = cls.promptUserForString(cls.DATE_MSG[1])
+        endDate = cls.promptUserForString(cls.DATE_MSG[2])
+        return startDate, endDate
 
-# abc = CliInputOutputPrompt.chooseTitleOrBody()
-# print(abc)
-# print(CliInputOutputPrompt.NOTE_PROMPT[0])
+    def printNotesAndDates(dates: dict):
+        for k, v in dates.items():
+            print(f"{k} - {v}")

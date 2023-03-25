@@ -29,15 +29,44 @@ def editNote():
         user_choice = lib_cli.CliInputOutputPrompt.chooseTitleOrBody()
         note = lib.Note.createNoteFromJson(json_data)
         new_text = lib_cli.CliInputOutputPrompt.getNewText(user_choice)
-        newData = note.changeNote(user_choice, new_text)
-        lib_file_system.FileSystemHandler.saveNote(newData)
+        new_data = note.changeNote(user_choice, new_text)
+        lib_file_system.FileSystemHandler.saveNote(new_data)
 
 # 5
+def deleteNote():
+    chosen_title = lib_cli.CliInputOutputPrompt.whichNoteUserWants()
+    lib_file_system.FileSystemReader.delNote(chosen_title)
 
+# 6
+def  listOfNotesByDate():
+    input_str_dates = lib_cli.CliInputOutputPrompt.getDatesFromUser()
+    dates = lib.Note.convertStrToDate(input_str_dates)
+    dict_of_notes = lib_file_system.FileSystemReader.lookForNotesByDates(dates)
+    if dict_of_notes == None: return
+    else:
+        final_dict = lib.Note.sortDictOfDates(dict_of_notes)
+        lib_cli.CliInputOutputPrompt.printNotesAndDates(final_dict)
 
-# if __name__ == '__main__':
-# createNoteFromCliInput()
+x = lib_cli.CliInputOutputPrompt
+def initialFunction():
+    print()
+    try:
+        user_response_int = int(input(x.USER_CHOICE_MSG[0]))
+        if user_response_int not in range(1, 7):
+            print(x.USER_CHOICE_MSG[1])
+            return initialFunction()
+        else:
+            if user_response_int == 1: createNoteFromCliInput()
+            elif user_response_int == 2: showNoteTitles()
+            elif user_response_int == 3: showNoteBody()
+            elif user_response_int == 4: editNote()
+            elif user_response_int == 5: deleteNote()
+            else: listOfNotesByDate()
+    except:
+        print (x.USER_CHOICE_MSG[1])
+        return initialFunction()
 
-editNote()
-# showNoteBody()
-# showNoteTitles()
+if __name__ == '__main__':
+    print()
+    x.msgToUser(x.INIT_MSG_CONTENT)
+    initialFunction()

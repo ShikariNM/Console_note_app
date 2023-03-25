@@ -1,6 +1,7 @@
 import os
 import json
 from glob import glob
+from datetime import datetime
 
 
 
@@ -24,14 +25,6 @@ class FileSystemHandler:
         finally:
             with open(file_name, "w", encoding="utf-8") as file:
                 file.write(write_data[0])
-
-    @classmethod
-    def delNote(cls, note_id):
-        file_name = cls.getFileName(note_id)
-        if os.path.isfile(file_name):
-            os.remove(file_name)
-        else:
-            cls.FILE_DOESNT_EXIST_MESSAGE
 
     # 1.4.1 Возвращает имя файла - строку типа 'data/строкаДатаВремяВФорматеID.json'
     @classmethod
@@ -71,36 +64,39 @@ class FileSystemHandler:
 
 class FileSystemReader(FileSystemHandler):
     STORAGE_DIR_FULL = os.getcwd() + "/data"
+    NOTE_DT_FORMAT = "%Y%m%d%H%M%S%f"
+    NOTE_RM_MSG = "Заметка удалена."
 
     def __init__(self, id):
         self.file_id = id
         self.file_name = ""
 
-    # x (внутри x.1 и x.2) принимает экземпляр класса с ID и именем из x.1,
-    # принимает и возвращает данные из файла
-    @classmethod
-    def getJsonById(cls, file_id):
-        file = cls.getFileFactory(file_id)  # x.1
-        json_data = file.readFile()         # x.2
-        return json_data
+    # # x (внутри x.1 и x.2) принимает экземпляр класса с ID и именем из x.1,
+    # # принимает и возвращает данные из файла
+    # @classmethod
+    # def getJsonById(cls, file_id):
+    #     file = cls.getFileFactory(file_id)  # x.1
+    #     json_data = file.readFile()         # x.2
+    #     return json_data
 
-    # x.1 Создает экземпляр файла. Исходя из входящего ID, автоматически присваивает этот
-    # ID соотв аргументу и присваивает строку 'data/строкаДатаВремяВФорматеID.json'
-    # аргументу "Имя"
-    @classmethod
-    def getFileFactory(cls, file_id):
-        file_obj = cls(file_id)
-        file_obj.file_name = file_obj.getFileName(file_obj.file_id) # 1.4.1
-        return file_obj
+    # # x.1 Создает экземпляр файла. Исходя из входящего ID, автоматически присваивает этот
+    # # ID соотв аргументу и присваивает строку 'data/строкаДатаВремяВФорматеID.json'
+    # # аргументу "Имя"
+    # @classmethod
+    # def getFileFactory(cls, file_id):
+    #     file_obj = cls(file_id)
+    #     file_obj.file_name = file_obj.getFileName(file_obj.file_id) # 1.4.1
+    #     return file_obj
 
-    # x.2 Проверяет есть можно ли выполнить метод открытия файла
-    # (существует ли такой файл) и выполняет, если можно
-    def readFile(self):
-        try:
-            return self.getFileContents() # x.2.1
-        except FileNotFoundError:
-            return self.FILE_DOESNT_EXIST_MESSAGE
+    # # x.2 Проверяет есть можно ли выполнить метод открытия файла
+    # # (существует ли такой файл) и выполняет, если можно
+    # def readFile(self):
+    #     try:
+    #         return self.getFileContents() # x.2.1
+    #     except FileNotFoundError:
+    #         return self.FILE_DOESNT_EXIST_MESSAGE
 
+    
     @classmethod
     def getFileContents(cls, file):
         with open(f'{cls.STORAGE_DIR_FULL}/{file}', 'r') as current_file:
@@ -122,8 +118,38 @@ class FileSystemReader(FileSystemHandler):
     def getJsonByNoteTitle(cls, title: str):
         for file in os.listdir(cls.STORAGE_DIR_FULL):
             json_data = cls.getFileContents(file)
-            if str(json_data).find(title) != -1:
+            if json_data["note_title"] == title:
                 return  json_data
-            else:
-                continue
+            else: continue
         print(cls.FILE_DOESNT_EXIST_MESSAGE)
+
+    # 5.1 Принимает название заметки и удаляет ее
+    @classmethod
+    def delNote(cls, title):
+        note_id = cls.getIDByTitle(title) # 5.1.1
+        if note_id == None: return
+        else: 
+            file_name = cls.getFileName(note_id)
+            os.remove(file_name)
+            print(cls.NOTE_RM_MSG)
+
+    # 5.1.1 Возвращает ID заметки, получая на вход название
+    @classmethod
+    def getIDByTitle(cls, title):
+        for file in os.listdir(cls.STORAGE_DIR_FULL):
+            if cls.getFileContents(file)["note_title"] == title:
+                return cls.getFileContents(file)["note_id"]
+            else: continue
+        print(cls.FILE_DOESNT_EXIST_MESSAGE)
+
+    @classmethod
+    def lookForNotesByDates(cls, dates):
+        list_of_notes = {}
+        for file in os.listdir(cls.STORAGE_DIR_FULL):
+            cr_date_str = cls.getFileContents(file)["note_creation_dt"]
+            cr_date = datetime.strptime(cr_date_str, cls.NOTE_DT_FORMAT)
+            if dates[0] <= cr_date and cr_date <= dates[1]:
+                list_of_notes[cr_date] = cls.getFileContents(file)["note_title"]
+            else: continue
+        if len(list_of_notes) > 0: return list_of_notes
+        else: print(cls.FILE_DOESNT_EXIST_MESSAGE)

@@ -1,6 +1,6 @@
 import json
 from datetime import datetime
-
+from operator import itemgetter
 # from tkinter.tix import ListNoteBook
 
 
@@ -14,6 +14,7 @@ class UserInputPrompt:
 class Note:
     NOTE_ID_FORMAT = "%Y%m%d%H%M%S"
     NOTE_DT_FORMAT = "%Y%m%d%H%M%S%f"
+    STR_TO_DATE_FORMAT = "%Y %m %d %H %M %S"
     NOTE_INPUT_STREAM_FORMAT = ("note_title", "note_body")
 
     def __init__(self) -> None:
@@ -85,3 +86,15 @@ class Note:
             self.note_body = newText
         self.note_last_modification_dt = self._formatDateTimeToString(datetime.now())
         return json.dumps(self.__dict__), self.__dict__["note_id"]
+    
+    @classmethod
+    def convertStrToDate(cls, strings: tuple or list):
+        dates = []
+        for string in strings:
+            date = datetime.strptime(string, cls.STR_TO_DATE_FORMAT)
+            dates.append(date)
+        return dates
+
+    def sortDictOfDates(dict_of_notes):
+        sorted_dict = dict(sorted(dict_of_notes.items(), key=itemgetter(1)))
+        return sorted_dict
