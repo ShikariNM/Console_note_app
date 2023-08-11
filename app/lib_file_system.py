@@ -4,7 +4,6 @@ from glob import glob
 from datetime import datetime
 
 
-
 class FileSystemHandler:
     STORAGE_DIR = "data"
     FILE_FORMAT = ".json"
@@ -70,32 +69,6 @@ class FileSystemReader(FileSystemHandler):
     def __init__(self, id):
         self.file_id = id
         self.file_name = ""
-
-    # # x (внутри x.1 и x.2) принимает экземпляр класса с ID и именем из x.1,
-    # # принимает и возвращает данные из файла
-    # @classmethod
-    # def getJsonById(cls, file_id):
-    #     file = cls.getFileFactory(file_id)  # x.1
-    #     json_data = file.readFile()         # x.2
-    #     return json_data
-
-    # # x.1 Создает экземпляр файла. Исходя из входящего ID, автоматически присваивает этот
-    # # ID соотв аргументу и присваивает строку 'data/строкаДатаВремяВФорматеID.json'
-    # # аргументу "Имя"
-    # @classmethod
-    # def getFileFactory(cls, file_id):
-    #     file_obj = cls(file_id)
-    #     file_obj.file_name = file_obj.getFileName(file_obj.file_id) # 1.4.1
-    #     return file_obj
-
-    # # x.2 Проверяет есть можно ли выполнить метод открытия файла
-    # # (существует ли такой файл) и выполняет, если можно
-    # def readFile(self):
-    #     try:
-    #         return self.getFileContents() # x.2.1
-    #     except FileNotFoundError:
-    #         return self.FILE_DOESNT_EXIST_MESSAGE
-
     
     @classmethod
     def getFileContents(cls, file):

@@ -51,7 +51,7 @@ class CliInputOutputPrompt():
 
     # Выводит в консоль вопрос к пользователю, что он хочет
     @classmethod
-    def msgToUser(message):
+    def msgToUser(cls, message):
         print("\n".join(message))
 
     @classmethod
